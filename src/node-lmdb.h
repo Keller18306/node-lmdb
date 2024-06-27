@@ -32,6 +32,7 @@
 #include <nan.h>
 #include <uv.h>
 #include "lmdb.h"
+#include <sstream>
 
 using namespace v8;
 using namespace node;
@@ -158,6 +159,8 @@ public:
         Gets information about the database environment.
     */
     static NAN_METHOD(info);
+
+    static NAN_METHOD(readers);
 
     /*
         Opens the database environment with the specified options. The options will be used to configure the environment before opening it.

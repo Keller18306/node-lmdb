@@ -526,6 +526,44 @@ NAN_METHOD(EnvWrap::info) {
     info.GetReturnValue().Set(obj);
 }
 
+struct MsgContext
+{
+    std::ostringstream stream;
+};
+
+// Callback-функция для сбора сообщений
+int msg_func(const char *msg, void *ctx)
+{
+    MsgContext *msg_ctx = static_cast<MsgContext *>(ctx);
+    msg_ctx->stream << msg;
+    return 0;
+}
+
+NAN_METHOD(EnvWrap::readers)
+{
+    Nan::HandleScope scope;
+
+    // Get the wrapper
+    EnvWrap *ew = Nan::ObjectWrap::Unwrap<EnvWrap>(info.This());
+    if (!ew->env)
+    {
+        return Nan::ThrowError("The environment is already closed.");
+    }
+
+    MsgContext msg_ctx;
+
+    int rc = mdb_reader_list(ew->env, (MDB_msg_func *)msg_func, &msg_ctx);
+    if (rc != 0)
+    {
+        return throwLmdbError(rc);
+    }
+
+    std::string result_str = msg_ctx.stream.str();
+    v8::Local<v8::String> result = Nan::New(result_str).ToLocalChecked();
+
+    info.GetReturnValue().Set(result);
+}
+
 NAN_METHOD(EnvWrap::copy) {
     Nan::HandleScope scope;
 
@@ -785,6 +823,7 @@ void EnvWrap::setupExports(Local<Object> exports) {
     envTpl->PrototypeTemplate()->Set(isolate, "batchWrite", Nan::New<FunctionTemplate>(EnvWrap::batchWrite));
     envTpl->PrototypeTemplate()->Set(isolate, "stat", Nan::New<FunctionTemplate>(EnvWrap::stat));
     envTpl->PrototypeTemplate()->Set(isolate, "info", Nan::New<FunctionTemplate>(EnvWrap::info));
+    envTpl->PrototypeTemplate()->Set(isolate, "readers", Nan::New<FunctionTemplate>(EnvWrap::readers));
     envTpl->PrototypeTemplate()->Set(isolate, "resize", Nan::New<FunctionTemplate>(EnvWrap::resize));
     envTpl->PrototypeTemplate()->Set(isolate, "copy", Nan::New<FunctionTemplate>(EnvWrap::copy));
     envTpl->PrototypeTemplate()->Set(isolate, "detachBuffer", Nan::New<FunctionTemplate>(EnvWrap::detachBuffer));
