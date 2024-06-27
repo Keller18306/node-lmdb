@@ -32,7 +32,11 @@
   "main": "./index.js",
   "scripts": {
     "install": "node-gyp-build",
-    "recompile": "node-gyp build",
+    "build:dev": "node-gyp -j 16 build --debug",
+    "build": "node-gyp -j 16 build",
+    "rebuild:dev": "node-gyp -j 16 rebuild --debug",
+    "rebuild": "node-gyp -j 16 rebuild",
+    "clean": "node-gyp clean",
     "before-publish": "prebuildify-ci download && prebuildify -t 20.0.0 -t 18.0.0 -t 17.1.0 -t 16.13.0 -t 15.5.0 -t 14.17.6 -t 12.22.7 -t electron@15.2.0",
     "prebuild": "prebuildify -t 20.0.0 -t 18.0.0 -t 17.1.0 -t 16.13.0 -t 15.5.0 -t 14.17.6 -t 12.22.7 -t electron@15.2.0",
     "prebuild-linux-x64": "prebuildify-cross -i centos7-devtoolset7 -i alpine -t 20.0.0 -t 18.0.0 -t 17.1.0 -t 16.13.0 -t 15.5.0 -t 14.17.6 -t 12.22.7 -t electron@15.2.0",

@@ -37,20 +37,21 @@
 using namespace v8;
 using namespace node;
 
-enum class NodeLmdbKeyType {
+enum class NodeLmdbKeyType
+{
 
     // Invalid key (used internally by node-lmdb)
     InvalidKey = -1,
-    
+
     // Default key (used internally by node-lmdb)
     DefaultKey = 0,
 
     // UCS-2/UTF-16 with zero terminator - Appears to V8 as string
     StringKey = 1,
-    
+
     // LMDB fixed size integer key with 32 bit keys - Appearts to V8 as an Uint32
     Uint32Key = 2,
-    
+
     // LMDB default key format - Appears to V8 as node::Buffer
     BinaryKey = 3,
 
@@ -74,13 +75,13 @@ Local<Value> keyToHandle(MDB_val &key, NodeLmdbKeyType keyType);
 
 #ifndef thread_local
 #ifdef __GNUC__
-# define thread_local __thread
+#define thread_local __thread
 #elif __STDC_VERSION__ >= 201112L
-# define thread_local _Thread_local
+#define thread_local _Thread_local
 #elif defined(_MSC_VER)
-# define thread_local __declspec(thread)
+#define thread_local __declspec(thread)
 #else
-# define thread_local
+#define thread_local
 #endif
 #endif
 
@@ -99,9 +100,10 @@ class TxnWrap;
 class DbiWrap;
 class EnvWrap;
 class CursorWrap;
-struct env_path_t {
-    MDB_env* env;
-    char* path;
+struct env_path_t
+{
+    MDB_env *env;
+    char *path;
     int count;
 };
 
@@ -110,22 +112,23 @@ struct env_path_t {
     Represents a database environment.
     (Wrapper for `MDB_env`)
 */
-class EnvWrap : public Nan::ObjectWrap {
+class EnvWrap : public Nan::ObjectWrap
+{
 private:
     // The wrapped object
     MDB_env *env;
     // Current write transaction
     TxnWrap *currentWriteTxn;
     // List of open read transactions
-    std::vector<TxnWrap*> readTxns;
+    std::vector<TxnWrap *> readTxns;
     // Constructor for TxnWrap
-    static thread_local Nan::Persistent<Function>* txnCtor;
+    static thread_local Nan::Persistent<Function> *txnCtor;
     // Constructor for DbiWrap
-    static thread_local Nan::Persistent<Function>* dbiCtor;
-    
-    static uv_mutex_t* envsLock;
+    static thread_local Nan::Persistent<Function> *dbiCtor;
+
+    static uv_mutex_t *envsLock;
     static std::vector<env_path_t> envs;
-    static uv_mutex_t* initMutex();
+    static uv_mutex_t *initMutex();
     // Cleans up stray transactions
     void cleanupStrayTxns();
 
@@ -144,12 +147,12 @@ public:
         (Wrapper for `mdb_env_create`)
     */
     static NAN_METHOD(ctor);
-    
+
     /*
         Gets statistics about the database environment.
     */
     static NAN_METHOD(stat);
-    
+
     /*
         Detaches a buffer from the backing store
     */
@@ -161,6 +164,8 @@ public:
     static NAN_METHOD(info);
 
     static NAN_METHOD(readers);
+
+    static NAN_METHOD(getFreePagesCount);
 
     /*
         Opens the database environment with the specified options. The options will be used to configure the environment before opening it.
@@ -199,7 +204,7 @@ public:
         * compact (optional) - Copy using compact setting
         * callback - Callback when finished (this is performed asynchronously)
     */
-    static NAN_METHOD(copy);    
+    static NAN_METHOD(copy);
 
     /*
         Closes the database environment.
@@ -267,7 +272,8 @@ public:
     Represents a transaction running on a database environment.
     (Wrapper for `MDB_txn`)
 */
-class TxnWrap : public Nan::ObjectWrap {
+class TxnWrap : public Nan::ObjectWrap
+{
 private:
     // The wrapped object
     MDB_txn *txn;
@@ -277,10 +283,10 @@ private:
 
     // Environment wrapper of the current transaction
     EnvWrap *ew;
-    
+
     // Flags used with mdb_txn_begin
     unsigned int flags;
-    
+
     // Remove the current TxnWrap from its EnvWrap
     void removeFromEnvWrap();
 
@@ -296,10 +302,10 @@ public:
     static NAN_METHOD(ctor);
 
     // Helper for all the get methods (not exposed)
-    static Nan::NAN_METHOD_RETURN_TYPE getCommon(Nan::NAN_METHOD_ARGS_TYPE info, Local<Value> (*successFunc)(MDB_val&));
+    static Nan::NAN_METHOD_RETURN_TYPE getCommon(Nan::NAN_METHOD_ARGS_TYPE info, Local<Value> (*successFunc)(MDB_val &));
 
     // Helper for all the put methods (not exposed)
-    static Nan::NAN_METHOD_RETURN_TYPE putCommon(Nan::NAN_METHOD_ARGS_TYPE info, void (*fillFunc)(Nan::NAN_METHOD_ARGS_TYPE info, MDB_val&), void (*freeFunc)(MDB_val&));
+    static Nan::NAN_METHOD_RETURN_TYPE putCommon(Nan::NAN_METHOD_ARGS_TYPE info, void (*fillFunc)(Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &), void (*freeFunc)(MDB_val &));
 
     /*
         Commits the transaction.
@@ -460,7 +466,8 @@ public:
     Represents a database instance in an environment.
     (Wrapper for `MDB_dbi`)
 */
-class DbiWrap : public Nan::ObjectWrap {
+class DbiWrap : public Nan::ObjectWrap
+{
 private:
     // Tells how keys should be treated
     NodeLmdbKeyType keyType;
@@ -514,10 +521,10 @@ public:
     Represents a cursor instance that is assigned to a transaction and a database instance
     (Wrapper for `MDB_cursor`)
 */
-class CursorWrap : public Nan::ObjectWrap {
+class CursorWrap : public Nan::ObjectWrap
+{
 
 private:
-
     // The wrapped object
     MDB_cursor *cursor;
     // Stores how key is represented
@@ -526,12 +533,12 @@ private:
     MDB_val key, data;
     // Free function for the current key
     argtokey_callback_t freeKey;
-    
+
     DbiWrap *dw;
     TxnWrap *tw;
-    
-    template<size_t keyIndex, size_t optionsIndex>
-    friend argtokey_callback_t cursorArgToKey(CursorWrap* cw, Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &key, bool &keyIsValid);
+
+    template <size_t keyIndex, size_t optionsIndex>
+    friend argtokey_callback_t cursorArgToKey(CursorWrap *cw, Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &key, bool &keyIsValid);
 
 public:
     CursorWrap(MDB_cursor *cursor);
@@ -565,9 +572,9 @@ public:
     // Helper method for getters (not exposed)
     static Nan::NAN_METHOD_RETURN_TYPE getCommon(
         Nan::NAN_METHOD_ARGS_TYPE info, MDB_cursor_op op,
-        argtokey_callback_t (*setKey)(CursorWrap* cw, Nan::NAN_METHOD_ARGS_TYPE info, MDB_val&, bool&),
-        void (*setData)(CursorWrap* cw, Nan::NAN_METHOD_ARGS_TYPE info, MDB_val&),
-        void (*freeData)(CursorWrap* cw, Nan::NAN_METHOD_ARGS_TYPE info, MDB_val&),
+        argtokey_callback_t (*setKey)(CursorWrap *cw, Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &, bool &),
+        void (*setData)(CursorWrap *cw, Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &),
+        void (*freeData)(CursorWrap *cw, Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &),
         Local<Value> (*convertFunc)(MDB_val &data));
 
     // Helper method for getters (not exposed)
@@ -604,7 +611,6 @@ public:
         * Callback that accepts the key and value
     */
     static NAN_METHOD(getCurrentBinary);
-
 
     /*
         Gets the current key-data pair with zero-copy that the cursor is pointing to. Returns the current key.
@@ -717,7 +723,8 @@ public:
 };
 
 // External string resource that glues MDB_val and v8::String
-class CustomExternalStringResource : public String::ExternalStringResource {
+class CustomExternalStringResource : public String::ExternalStringResource
+{
 private:
     const uint16_t *d;
     size_t l;

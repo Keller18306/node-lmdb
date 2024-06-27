@@ -157,6 +157,8 @@ declare module "node-lmdb" {
 		info(): Info;
 
 		readers(): string;
+		
+		getFreePagesCount(): number;
 
 		/**
 		 * Resizes the maximal size of the memory map. It may be called if no transactions are active in this process.
@@ -196,6 +198,8 @@ declare module "node-lmdb" {
 			callback?: (err: Error) => void
 		): void;
 
+		sync(): void;
+
 		/**
 		 * Close the environment
 		 */
@@ -230,6 +234,7 @@ declare module "node-lmdb" {
 		putBoolean(dbi: Dbi, key: Key, value: boolean, options?: PutOptions): void;
 
 		del(dbi: Dbi, key: Key, options?: KeyType): void;
+		del(dbi: Dbi, key: Key, value: Buffer | string | number | boolean, options?: KeyType): void;
 
 		/**
 		 * Retrieve a string using zero-copy semantics. Env.detachBuffer() must
