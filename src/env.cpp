@@ -649,6 +649,10 @@ NAN_METHOD(EnvWrap::readers)
 
 NAN_METHOD(EnvWrap::getFreePagesCount)
 {
+    MDB_txn *txn;
+    MDB_cursor *cursor;
+    MDB_val key, data;
+    mdb_size_t pages = 0, *iptr;
     MDB_dbi dbi = 0;
     int rc;
 
@@ -658,8 +662,6 @@ NAN_METHOD(EnvWrap::getFreePagesCount)
         return Nan::ThrowError("The environment is already closed.");
     }
 
-    MDB_txn *txn;
-
     rc = mdb_txn_begin(ew->env, NULL, MDB_RDONLY, &txn);
     if (rc)
     {
@@ -667,7 +669,6 @@ NAN_METHOD(EnvWrap::getFreePagesCount)
         return throwLmdbError(rc);
     }
 
-    MDB_cursor *cursor;
     rc = mdb_cursor_open(txn, dbi, &cursor);
     if (rc)
     {
@@ -675,8 +676,6 @@ NAN_METHOD(EnvWrap::getFreePagesCount)
         return throwLmdbError(rc);
     }
 
-    MDB_val key, data;
-    mdb_size_t pages = 0, *iptr;
     while ((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == 0)
     {
         iptr = static_cast<mdb_size_t *>(data.mv_data);
