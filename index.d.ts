@@ -160,6 +160,8 @@ declare module "node-lmdb" {
 		
 		getFreePagesCount(): number;
 
+		clearStaleReaders(): number;
+
 		/**
 		 * Resizes the maximal size of the memory map. It may be called if no transactions are active in this process.
 		 * @param {number} size maximal size of the memory map (the full environment) in bytes (default is 10485760 bytes)

@@ -167,6 +167,8 @@ public:
 
     static NAN_METHOD(getFreePagesCount);
 
+    static NAN_METHOD(clearStaleReaders);
+
     /*
         Opens the database environment with the specified options. The options will be used to configure the environment before opening it.
         (Wrapper for `mdb_env_open`)
