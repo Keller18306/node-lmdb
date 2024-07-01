@@ -165,9 +165,9 @@ public:
 
     static NAN_METHOD(readers);
 
-    static NAN_METHOD(getFreePagesCount);
+    static NAN_METHOD(readersCheck);
 
-    static NAN_METHOD(clearStaleReaders);
+    static NAN_METHOD(getFreePagesCount);
 
     /*
         Opens the database environment with the specified options. The options will be used to configure the environment before opening it.
@@ -717,11 +717,17 @@ public:
     */
     static NAN_METHOD(goToDupRange);
 
+    static NAN_METHOD(goToNextNoDup);
+
+    static NAN_METHOD(goToPrevNoDup);
+
     /*
         Deletes the key/data pair to which the cursor refers.
         (Wrapper for `mdb_cursor_del`)
     */
     static NAN_METHOD(del);
+
+    static NAN_METHOD(count);
 };
 
 // External string resource that glues MDB_val and v8::String

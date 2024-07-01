@@ -647,7 +647,7 @@ NAN_METHOD(EnvWrap::readers)
     info.GetReturnValue().Set(result);
 }
 
-NAN_METHOD(EnvWrap::clearStaleReaders)
+NAN_METHOD(EnvWrap::readersCheck)
 {
     Nan::HandleScope scope;
 
@@ -1012,8 +1012,8 @@ void EnvWrap::setupExports(Local<Object> exports)
     envTpl->PrototypeTemplate()->Set(isolate, "stat", Nan::New<FunctionTemplate>(EnvWrap::stat));
     envTpl->PrototypeTemplate()->Set(isolate, "info", Nan::New<FunctionTemplate>(EnvWrap::info));
     envTpl->PrototypeTemplate()->Set(isolate, "readers", Nan::New<FunctionTemplate>(EnvWrap::readers));
+    envTpl->PrototypeTemplate()->Set(isolate, "readersCheck", Nan::New<FunctionTemplate>(EnvWrap::readersCheck));
     envTpl->PrototypeTemplate()->Set(isolate, "getFreePagesCount", Nan::New<FunctionTemplate>(EnvWrap::getFreePagesCount));
-    envTpl->PrototypeTemplate()->Set(isolate, "clearStaleReaders", Nan::New<FunctionTemplate>(EnvWrap::clearStaleReaders));
     envTpl->PrototypeTemplate()->Set(isolate, "resize", Nan::New<FunctionTemplate>(EnvWrap::resize));
     envTpl->PrototypeTemplate()->Set(isolate, "copy", Nan::New<FunctionTemplate>(EnvWrap::copy));
     envTpl->PrototypeTemplate()->Set(isolate, "detachBuffer", Nan::New<FunctionTemplate>(EnvWrap::detachBuffer));

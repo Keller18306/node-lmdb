@@ -123,6 +123,30 @@ NAN_METHOD(CursorWrap::del) {
     }
 }
 
+NAN_METHOD(CursorWrap::count)
+{
+    Nan::HandleScope scope;
+
+    mdb_size_t count;
+    CursorWrap *cw = Nan::ObjectWrap::Unwrap<CursorWrap>(info.This());
+
+    unsigned int flags;
+    mdb_dbi_flags(cw->tw->txn, cw->dw->dbi, &flags);
+
+    if (!(flags & MDB_DUPSORT))
+    {
+        return Nan::ThrowError("Dbi is not MDB_DUPSORT");
+    }
+
+    int rc = mdb_cursor_count(cw->cursor, &count);
+    if (rc != 0)
+    {
+        return throwLmdbError(rc);
+    }
+
+    info.GetReturnValue().Set(Nan::New<Number>(count));
+}
+
 Nan::NAN_METHOD_RETURN_TYPE CursorWrap::getCommon(
     Nan::NAN_METHOD_ARGS_TYPE info,
     MDB_cursor_op op,
@@ -270,6 +294,10 @@ MAKE_GET_FUNC(goToNextDup, MDB_NEXT_DUP);
 
 MAKE_GET_FUNC(goToPrevDup, MDB_PREV_DUP);
 
+MAKE_GET_FUNC(goToNextNoDup, MDB_NEXT_NODUP);
+
+MAKE_GET_FUNC(goToPrevNoDup, MDB_PREV_NODUP);
+
 static void fillDataFromArg1(CursorWrap* cw, Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &data) {
     if (info[1]->IsString()) {
         CustomExternalStringResource::writeTo(Local<String>::Cast(info[1]), &data);
@@ -373,9 +401,12 @@ void CursorWrap::setupExports(Local<Object> exports) {
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToLastDup").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToLastDup));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToNextDup").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToNextDup));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToPrevDup").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToPrevDup));
+    cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToNextNoDup").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToNextNoDup));
+    cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToPrevNoDup").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToPrevNoDup));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToDup").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToDup));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToDupRange").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToDupRange));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("del").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::del));
+    cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("count").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::count));
 
     // Set exports
     exports->Set(Nan::GetCurrentContext(), Nan::New<String>("Cursor").ToLocalChecked(), cursorTpl->GetFunction(Nan::GetCurrentContext()).ToLocalChecked());

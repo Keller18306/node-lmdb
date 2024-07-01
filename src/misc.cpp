@@ -25,18 +25,58 @@
 #include <string.h>
 #include <stdio.h>
 
-void setupExportMisc(Local<Object> exports) {
+Local<Object> getVersionObject(Local<Context> context)
+{
     Local<Object> versionObj = Nan::New<Object>();
 
     int major, minor, patch;
     char *str = mdb_version(&major, &minor, &patch);
-    Local<Context> context = Nan::GetCurrentContext();
+    
     versionObj->Set(context, Nan::New<String>("versionString").ToLocalChecked(), Nan::New<String>(str).ToLocalChecked());
     versionObj->Set(context, Nan::New<String>("major").ToLocalChecked(), Nan::New<Integer>(major));
     versionObj->Set(context, Nan::New<String>("minor").ToLocalChecked(), Nan::New<Integer>(minor));
     versionObj->Set(context, Nan::New<String>("patch").ToLocalChecked(), Nan::New<Integer>(patch));
 
-    exports->Set(context, Nan::New<String>("version").ToLocalChecked(), versionObj);
+    return versionObj;
+}
+
+Local<Object> getErrorCodes(Local<Context> context)
+{
+    Local<Object> versionObj = Nan::New<Object>();
+
+    versionObj->Set(context, Nan::New<String>("MDB_SUCCESS").ToLocalChecked(), Nan::New<Number>(MDB_SUCCESS));
+    versionObj->Set(context, Nan::New<String>("MDB_KEYEXIST").ToLocalChecked(), Nan::New<Number>(MDB_KEYEXIST));
+    versionObj->Set(context, Nan::New<String>("MDB_NOTFOUND").ToLocalChecked(), Nan::New<Number>(MDB_NOTFOUND));
+    versionObj->Set(context, Nan::New<String>("MDB_PAGE_NOTFOUND").ToLocalChecked(), Nan::New<Number>(MDB_PAGE_NOTFOUND));
+    versionObj->Set(context, Nan::New<String>("MDB_CORRUPTED").ToLocalChecked(), Nan::New<Number>(MDB_CORRUPTED));
+    versionObj->Set(context, Nan::New<String>("MDB_PANIC").ToLocalChecked(), Nan::New<Number>(MDB_PANIC));
+    versionObj->Set(context, Nan::New<String>("MDB_VERSION_MISMATCH").ToLocalChecked(), Nan::New<Number>(MDB_VERSION_MISMATCH));
+    versionObj->Set(context, Nan::New<String>("MDB_INVALID").ToLocalChecked(), Nan::New<Number>(MDB_INVALID));
+    versionObj->Set(context, Nan::New<String>("MDB_MAP_FULL").ToLocalChecked(), Nan::New<Number>(MDB_MAP_FULL));
+    versionObj->Set(context, Nan::New<String>("MDB_DBS_FULL").ToLocalChecked(), Nan::New<Number>(MDB_DBS_FULL));
+    versionObj->Set(context, Nan::New<String>("MDB_READERS_FULL").ToLocalChecked(), Nan::New<Number>(MDB_READERS_FULL));
+    versionObj->Set(context, Nan::New<String>("MDB_TLS_FULL").ToLocalChecked(), Nan::New<Number>(MDB_TLS_FULL));
+    versionObj->Set(context, Nan::New<String>("MDB_TXN_FULL").ToLocalChecked(), Nan::New<Number>(MDB_TXN_FULL));
+    versionObj->Set(context, Nan::New<String>("MDB_CURSOR_FULL").ToLocalChecked(), Nan::New<Number>(MDB_CURSOR_FULL));
+    versionObj->Set(context, Nan::New<String>("MDB_PAGE_FULL").ToLocalChecked(), Nan::New<Number>(MDB_PAGE_FULL));
+    versionObj->Set(context, Nan::New<String>("MDB_MAP_RESIZED").ToLocalChecked(), Nan::New<Number>(MDB_MAP_RESIZED));
+    versionObj->Set(context, Nan::New<String>("MDB_INCOMPATIBLE").ToLocalChecked(), Nan::New<Number>(MDB_INCOMPATIBLE));
+    versionObj->Set(context, Nan::New<String>("MDB_BAD_RSLOT").ToLocalChecked(), Nan::New<Number>(MDB_BAD_RSLOT));
+    versionObj->Set(context, Nan::New<String>("MDB_BAD_TXN").ToLocalChecked(), Nan::New<Number>(MDB_BAD_TXN));
+    versionObj->Set(context, Nan::New<String>("MDB_BAD_VALSIZE").ToLocalChecked(), Nan::New<Number>(MDB_BAD_VALSIZE));
+    versionObj->Set(context, Nan::New<String>("MDB_BAD_DBI").ToLocalChecked(), Nan::New<Number>(MDB_BAD_DBI));
+    versionObj->Set(context, Nan::New<String>("MDB_PROBLEM").ToLocalChecked(), Nan::New<Number>(MDB_PROBLEM));
+    versionObj->Set(context, Nan::New<String>("MDB_LAST_ERRCODE").ToLocalChecked(), Nan::New<Number>(MDB_LAST_ERRCODE));
+
+    return versionObj;
+}
+
+void setupExportMisc(Local<Object> exports)
+{
+    Local<Context> context = Nan::GetCurrentContext();
+
+    exports->Set(context, Nan::New<String>("version").ToLocalChecked(), getVersionObject(context));
+    exports->Set(context, Nan::New<String>("ErrorCodes").ToLocalChecked(), getErrorCodes(context));
 }
 
 void setFlagFromValue(int *flags, int flag, const char *name, bool defaultValue, Local<Object> options) {

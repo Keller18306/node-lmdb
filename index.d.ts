@@ -124,6 +124,62 @@ declare module "node-lmdb" {
 		readOnly: boolean;
 	}
 
+	enum ErrorCodes {
+		/**	Successful result */
+		MDB_SUCCESS = 0,
+		/** key/data pair already exists */
+		MDB_KEYEXIST = -30799,
+		/** key/data pair not found (EOF) */
+		MDB_NOTFOUND = -30798,
+		/** Requested page not found - this usually indicates corruption */
+		MDB_PAGE_NOTFOUND = -30797,
+		/** Located page was wrong type */
+		MDB_CORRUPTED = -30796,
+		/** Update of meta page failed or environment had fatal error */
+		MDB_PANIC = -30795,
+		/** Environment version mismatch */
+		MDB_VERSION_MISMATCH = -30794,
+		/** File is not a valid LMDB file */
+		MDB_INVALID = -30793,
+		/** Environment mapsize reached */
+		MDB_MAP_FULL = -30792,
+		/** Environment maxdbs reached */
+		MDB_DBS_FULL = -30791,
+		/** Environment maxreaders reached */
+		MDB_READERS_FULL = -30790,
+		/** Too many TLS keys in use - Windows only */
+		MDB_TLS_FULL = -30789,
+		/** Txn has too many dirty pages */
+		MDB_TXN_FULL = -30788,
+		/** Cursor stack too deep - internal error */
+		MDB_CURSOR_FULL = -30787,
+		/** Page has not enough space - internal error */
+		MDB_PAGE_FULL = -30786,
+		/** Database contents grew beyond environment mapsize */
+		MDB_MAP_RESIZED = -30785,
+		/** Operation and DB incompatible, or DB type changed. This can mean:
+		 *	<ul>
+		 *	<li>The operation expects an #MDB_DUPSORT / #MDB_DUPFIXED database.
+		 *	<li>Opening a named DB when the unnamed DB has #MDB_DUPSORT / #MDB_INTEGERKEY.
+		 *	<li>Accessing a data record as a database, or vice versa.
+		 *	<li>The database was dropped and recreated with different flags.
+		 *	</ul>
+		 */
+		MDB_INCOMPATIBLE = -30784,
+		/** Invalid reuse of reader locktable slot */
+		MDB_BAD_RSLOT = -30783,
+		/** Transaction must abort, has a child, or is invalid */
+		MDB_BAD_TXN = -30782,
+		/** Unsupported size of key/DB name/data, or wrong DUPFIXED size */
+		MDB_BAD_VALSIZE = -30781,
+		/** The specified DBI was changed unexpectedly */
+		MDB_BAD_DBI = -30780,
+		/** Unexpected problem - txn should abort */
+		MDB_PROBLEM = -30779,
+		/** The last defined error code */
+		MDB_LAST_ERRCODE
+	}
+
 	class Env {
 		open(options: EnvOptions): void;
 
@@ -156,11 +212,21 @@ declare module "node-lmdb" {
 		 */
 		info(): Info;
 
+		/**
+		 * Dump the entries in the reader lock table.
+		 */
 		readers(): string;
-		
-		getFreePagesCount(): number;
 
-		clearStaleReaders(): number;
+		/**
+		 * Check for stale entries in the reader lock table.
+		 * @return Number of stale slots that were cleared
+		 */
+		readersCheck(): number;
+
+		/**
+		 * Count of freepages
+		 */
+		getFreePagesCount(): number;
 
 		/**
 		 * Resizes the maximal size of the memory map. It may be called if no transactions are active in this process.
@@ -289,6 +355,8 @@ declare module "node-lmdb" {
 		goToLastDup(options?: KeyType): T | null;
 		goToNextDup(options?: KeyType): T | null;
 		goToPrevDup(options?: KeyType): T | null;
+		goToNextNoDup(options?: KeyType): T | null;
+		goToPrevNoDup(options?: KeyType): T | null;
 		goToDup(key: T, data: Value, options?: KeyType): T | null;
 		goToDupRange(key: T, data: Value, options?: KeyType): T | null;
 
@@ -303,5 +371,7 @@ declare module "node-lmdb" {
 		del(options?: DelOptions): void;
 
 		close(): void;
+
+		count(): number;
 	}
 }
