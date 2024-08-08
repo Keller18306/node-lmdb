@@ -223,6 +223,11 @@ argtokey_callback_t argToKey(const Local<Value> &val, MDB_val &key, NodeLmdbKeyT
     return nullptr;
 }
 
+argtokey_callback_t argToKeyAuto(const Local<Value> &val, MDB_val &key, bool &isValid)
+{
+    return argToKey(val, key, inferKeyType(val), isValid);
+}
+
 Local<Value> keyToHandle(MDB_val &key, NodeLmdbKeyType keyType) {
     switch (keyType) {
     case NodeLmdbKeyType::Uint32Key:

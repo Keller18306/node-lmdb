@@ -373,5 +373,6 @@ declare module "node-lmdb" {
 		close(): void;
 
 		count(): number;
+		exists(key: Value, data?: Value): boolean;
 	}
 }

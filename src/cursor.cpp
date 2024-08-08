@@ -147,6 +147,70 @@ NAN_METHOD(CursorWrap::count)
     info.GetReturnValue().Set(Nan::New<Number>(count));
 }
 
+NAN_METHOD(CursorWrap::exists)
+{
+    Nan::HandleScope scope;
+
+    CursorWrap *cw = Nan::ObjectWrap::Unwrap<CursorWrap>(info.This());
+
+    // Check the number of arguments passed.
+    if (info.Length() < 1)
+    {
+        return Nan::ThrowError("Key is required");
+    }
+
+    MDB_val data;
+    argtokey_callback_t freeData = nullptr;
+    bool keyIsValid;
+
+    if (cw->freeKey)
+    {
+        cw->freeKey(cw->key);
+        cw->freeKey = nullptr;
+    }
+
+    // Set new key and assign the deleter function
+    cw->freeKey = argToKeyAuto(info[0], cw->key, keyIsValid);
+    if (!keyIsValid)
+    {
+        //already threw an error, no need to throw here
+        return;
+    }
+
+    bool hasData = info.Length() > 1 && !info[1]->IsNull() && !info[1]->IsUndefined();
+
+    // If data is provided, set it
+    if (hasData)
+    {
+        freeData = argToKeyAuto(info[1], data, keyIsValid);
+        if (!keyIsValid)
+        {
+            // already threw an error, no need to throw here
+            return;
+        }
+    }
+
+    int rc = mdb_cursor_get(cw->cursor, &(cw->key), hasData ? &data : nullptr, !hasData ? MDB_SET : MDB_GET_BOTH);
+
+    if (freeData)
+    {
+        freeData(data);
+    }
+
+    if (rc == MDB_NOTFOUND)
+    {
+        info.GetReturnValue().Set(Nan::New(false));
+    }
+    else if (rc == 0)
+    {
+        info.GetReturnValue().Set(Nan::New(true));
+    }
+    else
+    {
+        throwLmdbError(rc);
+    }
+}
+
 Nan::NAN_METHOD_RETURN_TYPE CursorWrap::getCommon(
     Nan::NAN_METHOD_ARGS_TYPE info,
     MDB_cursor_op op,
@@ -407,6 +471,7 @@ void CursorWrap::setupExports(Local<Object> exports) {
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToDupRange").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToDupRange));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("del").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::del));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("count").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::count));
+    cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("exists").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::exists));
 
     // Set exports
     exports->Set(Nan::GetCurrentContext(), Nan::New<String>("Cursor").ToLocalChecked(), cursorTpl->GetFunction(Nan::GetCurrentContext()).ToLocalChecked());
