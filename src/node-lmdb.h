@@ -729,6 +729,8 @@ public:
         (Wrapper for `mdb_cursor_del`)
     */
     static NAN_METHOD(del);
+    
+    static NAN_METHOD(put);
 
     static NAN_METHOD(count);
 };

@@ -211,6 +211,82 @@ NAN_METHOD(CursorWrap::exists)
     }
 }
 
+NAN_METHOD(CursorWrap::put)
+{
+    Nan::HandleScope scope;
+
+    // Check argument count
+    auto argCount = info.Length();
+    if (argCount < 2 || argCount > 3)
+    {
+        return Nan::ThrowError("Invalid number of arguments to, should be: (a) <key>, <data> (b) <key>, <data>, <options>");
+    }
+
+    CursorWrap *cw = Nan::ObjectWrap::Unwrap<CursorWrap>(info.This());
+
+    Local<Value> keyHandle = info[0];
+    Local<Value> dataHandle = info[1];
+    Local<Value> optionsHandle = info[2];
+
+    // Set key
+    MDB_val key, data;
+    bool keyIsValid;
+
+    auto keyType = inferAndValidateKeyType(keyHandle, optionsHandle, cw->keyType, keyIsValid);
+    if (!keyIsValid)
+    {
+        // inferAndValidateKeyType already threw an error
+        return;
+    }
+
+    auto freeKey = argToKey(keyHandle, key, keyType, keyIsValid);
+    if (!keyIsValid)
+    {
+        // argToKey already threw an error
+        return;
+    }
+
+    // Set data
+    auto freeData = argToKeyAuto(dataHandle, data, keyIsValid);
+    if (!keyIsValid)
+    {
+        // already threw an error, no need to throw here
+        return;
+    }
+
+    int flags = 0;
+    if (!optionsHandle->IsNull() && !optionsHandle->IsUndefined() && optionsHandle->IsObject())
+    {
+        auto options = Local<Object>::Cast(optionsHandle);
+
+        // setFlagFromValue(&flags, MDB_CURRENT, "current", false, options);
+        setFlagFromValue(&flags, MDB_NODUPDATA, "noDupData", false, options);
+        setFlagFromValue(&flags, MDB_NOOVERWRITE, "noOverwrite", false, options);
+        setFlagFromValue(&flags, MDB_APPEND, "append", false, options);
+        setFlagFromValue(&flags, MDB_APPENDDUP, "appendDup", false, options);
+        // setFlagFromValue(&flags, MDB_MULTIPLE, "multiple", false, options);
+
+        // NOTE: does not make sense to support MDB_RESERVE, because it wouldn't save the memcpy from V8 to lmdb
+    }
+
+    int rc = mdb_cursor_put(cw->cursor, &key, &data, flags);
+
+    if (freeKey)
+    {
+        freeKey(key);
+    }
+
+    if (freeData)
+    {
+        freeData(data);
+    }
+
+    if (rc != 0)
+    {
+        return throwLmdbError(rc);
+    }
+}
+
 Nan::NAN_METHOD_RETURN_TYPE CursorWrap::getCommon(
     Nan::NAN_METHOD_ARGS_TYPE info,
     MDB_cursor_op op,
@@ -470,6 +546,7 @@ void CursorWrap::setupExports(Local<Object> exports) {
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToDup").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToDup));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("goToDupRange").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::goToDupRange));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("del").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::del));
+    cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("put").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::put));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("count").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::count));
     cursorTpl->PrototypeTemplate()->Set(Nan::New<String>("exists").ToLocalChecked(), Nan::New<FunctionTemplate>(CursorWrap::exists));
 

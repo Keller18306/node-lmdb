@@ -369,6 +369,7 @@ declare module "node-lmdb" {
 		getCurrentBinaryUnsafe(fn?: CursorCallback<Buffer>): Buffer | null;
 
 		del(options?: DelOptions): void;
+		put(key: Key, value: Value, options?: PutOptions): void;
 
 		close(): void;
 
